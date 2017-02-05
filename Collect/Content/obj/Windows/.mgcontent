@@ -4,9 +4,10 @@
   <Platform>Windows</Platform>
   <Config />
   <SourceFiles>
-    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/Score.spritefont</File>
     <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/hit5.wav</File>
     <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/hit10.wav</File>
     <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/miss.wav</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/font.spritefont</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/bigfont.spritefont</File>
   </SourceFiles>
 </SourceFileCollection>

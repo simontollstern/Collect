@@ -25,7 +25,8 @@ c:\users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\ob
 c:\users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\obj\x86\Debug\Collect.pdb
 c:\users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\font.xnb
 c:\users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\pixel.jpg
-c:\Users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\Score.xnb
 c:\Users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\hit10.xnb
 c:\Users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\hit5.xnb
 c:\Users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\miss.xnb
+c:\Users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\bigfont.xnb
+c:\Users\simontollstern\documents\visual studio 2015\Projects\Collect\Collect\bin\Windows\x86\Debug\Content\bigfont.spritefont

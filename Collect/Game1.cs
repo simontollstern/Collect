@@ -29,6 +29,7 @@ namespace Collect
         Texture2D line;
 
         SpriteFont font;
+        SpriteFont bigfont;
 
         SoundEffect hit10;
         SoundEffect hit5;
@@ -48,9 +49,6 @@ namespace Collect
         Color hit3Color = Color.Red;
         Color hit4Color = Color.Red;
 
-        Color tempcolor = Color.Wheat;
-        Rectangle temprect;
-
         int rectPosX = 0;
         int hit1PosX = 0;
         int hit2PosX = 100;
@@ -62,7 +60,7 @@ namespace Collect
         int afterPosY = 470;
         int missPosY = 500;
 
-        int missCount = 0;
+        int lives = 3;
         int combo = 0;
         int hitScore = 0;
         int totalScore = 0;
@@ -89,7 +87,9 @@ namespace Collect
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             line = Content.Load<Texture2D>("pixel");
-            font = Content.Load<SpriteFont>("Score");
+
+            font = Content.Load<SpriteFont>("font");
+            bigfont = Content.Load<SpriteFont>("bigfont");
 
             hit10 = Content.Load<SoundEffect>("hit10");
             hit5 = Content.Load<SoundEffect>("hit5");
@@ -161,8 +161,6 @@ namespace Collect
             afterRect = new Rectangle(rectPosX, afterPosY, GraphicsDevice.Viewport.Width, 10);
             missRect = new Rectangle(rectPosX, missPosY, GraphicsDevice.Viewport.Width, 1);
 
-            temprect = new Rectangle(150, 550, 100, 50);
-
             timer += gameTime.ElapsedGameTime.Milliseconds;
 
             if (timer > spawnTime)
@@ -182,7 +180,6 @@ namespace Collect
                     if (hit1Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Blue;
                         combo++;
                         hitScore = 10;
                         totalScore += combo * hitScore;
@@ -191,7 +188,6 @@ namespace Collect
                     if ((hit1Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit1Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Lime;
                         combo++;
                         hitScore = 5;
                         totalScore += combo * hitScore;
@@ -210,7 +206,6 @@ namespace Collect
                     if (hit2Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Blue;
                         combo++;
                         hitScore = 10;
                         totalScore += combo * hitScore;
@@ -219,7 +214,6 @@ namespace Collect
                     if ((hit2Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit2Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Lime;
                         combo++;
                         hitScore = 5;
                         totalScore += combo * hitScore;
@@ -239,7 +233,6 @@ namespace Collect
                     if (hit3Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Blue;
                         combo++;
                         hitScore = 10;
                         totalScore += combo * hitScore;
@@ -248,7 +241,6 @@ namespace Collect
                     if ((hit3Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit3Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Lime;
                         combo++;
                         hitScore = 5;
                         totalScore += combo * hitScore;
@@ -268,7 +260,6 @@ namespace Collect
                     if (hit4Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Blue;
                         combo++;
                         hitScore = 10;
                         totalScore += combo * hitScore;
@@ -277,7 +268,6 @@ namespace Collect
                     if ((hit4Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit4Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
                     {
                         remove.Add(block);
-                        tempcolor = Color.Lime;
                         combo++;
                         hitScore = 5;
                         totalScore += combo * hitScore;
@@ -295,9 +285,9 @@ namespace Collect
                 if (missRect.Intersects(block.blockRect))
                 {
                     remove.Add(block);
-                    missCount++;
-                    tempcolor = Color.Red;
+                    lives--;
                     combo = 0;
+                    hitScore = 0;
                     miss.Play();
                 }
             }
@@ -306,7 +296,7 @@ namespace Collect
                 blocks.Remove(block);
             }
 
-            if (missCount == 3)
+            if (lives == 0)
             {
                 state = State.End;
             }
@@ -317,7 +307,7 @@ namespace Collect
             if (kState.IsKeyDown(Keys.Enter) && keyPressed == false)
             {
                 keyPressed = true;
-                missCount = 0;
+                lives = 3;
                 combo = 0;
                 hitScore = 0;
                 totalScore = 0;
@@ -362,9 +352,9 @@ namespace Collect
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "no sound", new Vector2(100, 200), Color.Teal);
-            spriteBatch.DrawString(font, "stepmania", new Vector2(100, 215), Color.Yellow);
-            spriteBatch.DrawString(font, "ripoff", new Vector2(100, 230), Color.Red);
+            spriteBatch.DrawString(bigfont, "no sound", new Vector2(100, 200), Color.Teal);
+            spriteBatch.DrawString(bigfont, "stepmania", new Vector2(100, 225), Color.Yellow);
+            spriteBatch.DrawString(bigfont, "ripoff", new Vector2(100, 250), Color.Red);
             spriteBatch.DrawString(font, "press enter to start", new Vector2(100, 400), Color.White);
             spriteBatch.End();
         }
@@ -373,7 +363,7 @@ namespace Collect
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "options", new Vector2(100, 200), Color.Teal);
+            spriteBatch.DrawString(bigfont, "options", new Vector2(100, 200), Color.Teal);
             spriteBatch.DrawString(font, "nothing here yet", new Vector2(100, 300), Color.Yellow);
             spriteBatch.DrawString(font, "play with D,F,J,K btw", new Vector2(100, 350), Color.Red);
             spriteBatch.DrawString(font, "press enter", new Vector2(100, 400), Color.White);
@@ -390,13 +380,29 @@ namespace Collect
             spriteBatch.Draw(line, hit4Rect, hit4Color);
             spriteBatch.Draw(line, afterRect, Color.Black);
             spriteBatch.Draw(line, missRect, Color.Black);
-            spriteBatch.DrawString(font, "" + totalScore, new Vector2(100, 550), Color.White);
-            spriteBatch.DrawString(font, "" + missCount, new Vector2(300, 550), Color.White);
-            spriteBatch.DrawString(font, "" + combo, new Vector2(200, 520), Color.White);
 
-            spriteBatch.Draw(line, temprect, tempcolor);
+            spriteBatch.DrawString(font, "Score", new Vector2(10, 510), Color.White);
+            spriteBatch.DrawString(font, "Combo", new Vector2(110, 510), Color.White);
+            spriteBatch.DrawString(font, "Lives left", new Vector2(210, 510), Color.White);
+            spriteBatch.DrawString(font, "Hit", new Vector2(310, 510), Color.White);
+            spriteBatch.DrawString(bigfont, "" + totalScore, new Vector2(10, 550), Color.White);
+            spriteBatch.DrawString(bigfont, "" + combo, new Vector2(110, 550), Color.White);
+            spriteBatch.DrawString(bigfont, "" + lives, new Vector2(210, 550), Color.White);
 
-            foreach(Block block in blocks)
+            if(hitScore == 10)
+            {
+                spriteBatch.DrawString(bigfont, "" + hitScore, new Vector2(310, 550), Color.Yellow);
+            }
+            else if(hitScore == 5)
+            {
+                spriteBatch.DrawString(bigfont, "" + hitScore, new Vector2(310, 550), Color.Lime);
+            }
+            else
+            {
+                spriteBatch.DrawString(bigfont, "" + hitScore, new Vector2(310, 550), Color.Red);
+            }
+
+            foreach (Block block in blocks)
             {
                 block.Draw(spriteBatch);
             }
@@ -407,7 +413,7 @@ namespace Collect
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "leaderboard", new Vector2(100, 200), Color.Teal);
+            spriteBatch.DrawString(bigfont, "leaderboard", new Vector2(100, 200), Color.Teal);
             spriteBatch.DrawString(font, "you scored: "+totalScore, new Vector2(100, 300), Color.Yellow);
             spriteBatch.DrawString(font, "press enter to retry", new Vector2(100, 400), Color.White);
             spriteBatch.End();
