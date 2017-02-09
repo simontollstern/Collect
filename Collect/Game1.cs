@@ -2,74 +2,110 @@
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-namespace Collect
-{
-    public class Game1 : Game
-    {
+namespace Collect {
+    public class Game1 : Game {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        enum State
-        {
-            Menu, Options, Play, End
+        //De states spelet kan befinna sig i
+        enum State {
+            Menu, Options, Hiscores, Play, End
         }
         State state;
-        bool keyPressed = false;
 
+        //Integer som kontrollerar vilken knapp i menyn som är markerad
+        int menu = 1;
+
+        //Färger för markerad knapp i menyn
+        Color menuColor1 = Color.White;
+        Color menuColor2 = Color.White;
+        Color menuColor3 = Color.White;
+        Color menuColor4 = Color.White;
+        Color menuColor5 = Color.White;
+        Color menuColor6 = Color.White;
+        Color menuColor7 = Color.White;
+        Color menuColor8 = Color.White;
+        Color menuColor9 = Color.White;
+        Color menuColor10 = Color.White;
+
+        //Booleans som kontrollerar input
+        bool enterPressed = false;
+        bool upPressed = false;
+        bool downPressed = false;
+        bool rightPressed = false;
+        bool leftPressed = false;
         bool dPressed = false;
         bool fPressed = false;
         bool jPressed = false;
         bool kPressed = false;
 
-        List<Block> blocks = new List<Block>();
-        List<Block> remove = new List<Block>();
+        //Booleans som ser till att information endast skickas/hämtas en gång
+        bool hasRead = false;
+        bool hasPrinted = false;
+        bool hasSubmitted = false;
 
-        Texture2D line;
+        //Objekt av Judge.cs
+        Judge judge = new Judge();
 
+        //Lista för pilar och lista där de läggs för att tas bort
+        List<Arrow> arrows = new List<Arrow>();
+        List<Arrow> remove = new List<Arrow>();
+
+        //Lista för Hiscore-objekt
+        List<Hiscore> hiscores = new List<Hiscore>();
+
+        //Lista för alfabetet i chars
+        List<string> chars = new List<string>();
+
+        //Typsnitt
         SpriteFont font;
         SpriteFont bigfont;
 
-        SoundEffect hit10;
-        SoundEffect hit5;
+        //Integers för antalet bra/dåliga träffar
+        int hit10count = 0;
+        int hit5count = 0;
+
+        //Ljudeffekter
+        SoundEffect clickclick;
+        SoundEffect click;
         SoundEffect miss;
+        SoundEffect pop;
 
-        Rectangle hit1Rect;
-        Rectangle hit2Rect;
-        Rectangle hit3Rect;
-        Rectangle hit4Rect;
+        //Strings för att bestämma användarnamn
+        string char1;
+        string char2;
+        string char3;
 
-        Rectangle beforeRect;
-        Rectangle afterRect;
-        Rectangle missRect;
+        //Integers som håller koll på vilka bokstäver ovanstående strings blir
+        int char1nr = 0;
+        int char2nr = 0;
+        int char3nr = 0;
 
-        Color hit1Color = Color.Red;
-        Color hit2Color = Color.Red;
-        Color hit3Color = Color.Red;
-        Color hit4Color = Color.Red;
+        //Strings för att bestämma keybinds (TBA)
+        string key1 = "D";
+        string key2 = "F";
+        string key3 = "J";
+        string key4 = "K";
 
-        int rectPosX = 0;
-        int hit1PosX = 0;
-        int hit2PosX = 100;
-        int hit3PosX = 200;
-        int hit4PosX = 300;
+        //Integer nödvändiga unders spelets gång:
+        int speed = 10; //Pilarnas hastighet
+        int lives = 3; //Antal liv
+        int combo = 0; //Nuvarande träffar i rad
+        int maxCombo = 0; //Maximalt antal träffar i rad
+        int hitScore = 0; //Poäng en träff ger innan uträkning hitScore * combo (10 eller 5)
+        int totalScore = 0; //Totalpoäng
 
-        int beforePosY = 450;
-        int hitPosY = 460;
-        int afterPosY = 470;
-        int missPosY = 500;
-
-        int lives = 3;
-        int combo = 0;
-        int hitScore = 0;
-        int totalScore = 0;
-
-        int timer = 0;
+        //Integers som håller koll på tid
+        int arrowTimer = 0;
+        int intervalTimer = 0;
         int spawnTime = 500;
 
-        public Game1()
-        {
+        public Game1() {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
@@ -77,42 +113,38 @@ namespace Collect
             this.graphics.PreferredBackBufferHeight = 600;
         }
 
-        protected override void Initialize()
-        {
+        protected override void Initialize() {
             base.Initialize();
         }
 
-        protected override void LoadContent()
-        {
+        protected override void LoadContent() {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            line = Content.Load<Texture2D>("pixel");
+            font = Content.Load<SpriteFont>("fonts/font");
+            bigfont = Content.Load<SpriteFont>("fonts/bigfont");
 
-            font = Content.Load<SpriteFont>("font");
-            bigfont = Content.Load<SpriteFont>("bigfont");
-
-            hit10 = Content.Load<SoundEffect>("hit10");
-            hit5 = Content.Load<SoundEffect>("hit5");
-            miss = Content.Load<SoundEffect>("miss");
-            
+            clickclick = Content.Load<SoundEffect>("sounds/hit10");
+            click = Content.Load<SoundEffect>("sounds/hit5");
+            miss = Content.Load<SoundEffect>("sounds/miss");
+            pop = Content.Load<SoundEffect>("sounds/pop");
         }
 
-        protected override void UnloadContent()
-        {
+        protected override void UnloadContent() {
 
         }
 
-        protected override void Update(GameTime gameTime)
-        {
+        protected override void Update(GameTime gameTime) {
             base.Update(gameTime);
 
-            switch (state)
-            {
+            switch (state) {
                 case State.Menu:
                     UpdateMenu(gameTime);
                     break;
                 case State.Options:
                     UpdateOptions(gameTime);
+                    break;
+                case State.Hiscores:
+                    UpdateHiscores(gameTime);
                     break;
                 case State.Play:
                     UpdatePlay(gameTime);
@@ -122,222 +154,537 @@ namespace Collect
                     break;
             }
         }
-        void UpdateMenu(GameTime gameTime)
-        {
+        void UpdateMenu(GameTime gameTime) {
             KeyboardState kState = Keyboard.GetState();
-            if (kState.IsKeyDown(Keys.Enter) && keyPressed == false)
-            {
-                keyPressed = true;
-                state = State.Options;
+
+            if (kState.IsKeyDown(Keys.Up) && upPressed == false) {
+                upPressed = true;
+                click.Play();
+                if (menu == 1) {
+                    menu = 3;
+                } else {
+                    menu--;
+                }
             }
-            if (kState.IsKeyUp(Keys.Enter))
-            {
-                keyPressed = false;
+            if (kState.IsKeyDown(Keys.Down) && downPressed == false) {
+                downPressed = true;
+                click.Play();
+                if (menu == 3) {
+                    menu = 1;
+                } else {
+                    menu++;
+                }
+            }
+            if (kState.IsKeyDown(Keys.Enter) && enterPressed == false) {
+                if (menu == 1) {
+                    state = State.Options;
+                }
+                if (menu == 2) {
+                    state = State.Hiscores;
+                }
+                if (menu == 3) {
+                    this.Exit();
+                }
+                enterPressed = true;
+                clickclick.Play();
+            }
+            if (kState.IsKeyUp(Keys.Enter)) {
+                enterPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Up)) {
+                upPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Down)) {
+                downPressed = false;
+            }
+
+            if (menu == 1) {
+                menuColor1 = Color.Teal;
+
+            } else {
+                menuColor1 = Color.White;
+            }
+            if (menu == 2) {
+                menuColor2 = Color.Teal;
+            } else {
+                menuColor2 = Color.White;
+            }
+            if (menu == 3) {
+                menuColor3 = Color.Teal;
+            } else {
+                menuColor3 = Color.White;
             }
         }
-        void UpdateOptions(GameTime gameTime)
-        {
+        void UpdateOptions(GameTime gameTime) {
             KeyboardState kState = Keyboard.GetState();
-            if (kState.IsKeyDown(Keys.Enter) && keyPressed == false)
-            {
-                keyPressed = true;
-                state = State.Play;
+
+            for (char c = 'A'; c <= 'Z'; c++) {
+                chars.Add("" + c);
             }
-            if (kState.IsKeyUp(Keys.Enter))
-            {
-                keyPressed = false;
+
+            char1 = chars[char1nr];
+            char2 = chars[char2nr];
+            char3 = chars[char3nr];
+
+            if (kState.IsKeyDown(Keys.Up) && upPressed == false) {
+                upPressed = true;
+                click.Play();
+                if (menu == 1) {
+                    menu = 10;
+                } else {
+                    menu--;
+                }
+            }
+            if (kState.IsKeyDown(Keys.Down) && downPressed == false) {
+                downPressed = true;
+                click.Play();
+                if (menu == 10) {
+                    menu = 1;
+                } else {
+                    menu++;
+                }
+            }
+            if (kState.IsKeyDown(Keys.Left) && leftPressed == false) {
+                leftPressed = true;
+                click.Play();
+                if (menu == 1) {
+                    if (char1nr == 0) {
+                        char1nr = 25;
+                    } else {
+                        char1nr--;
+                    }
+                }
+                if (menu == 2) {
+                    if (char2nr == 0) {
+                        char2nr = 25;
+                    } else {
+                        char2nr--;
+                    }
+                }
+                if (menu == 3) {
+                    if (char3nr == 0) {
+                        char3nr = 25;
+                    } else {
+                        char3nr--;
+                    }
+                }
+                if (menu == 8) {
+                    if (speed > 2) {
+                        speed--;
+                    }
+                }
+            }
+            if (kState.IsKeyDown(Keys.Right) && rightPressed == false) {
+                rightPressed = true;
+                click.Play();
+                if (menu == 1) {
+                    if (char1nr == 25) {
+                        char1nr = 0;
+                    } else {
+                        char1nr++;
+                    }
+                }
+                if (menu == 2) {
+                    if (char2nr == 25) {
+                        char2nr = 0;
+                    } else {
+                        char2nr++;
+                    }
+                }
+                if (menu == 3) {
+                    if (char3nr == 25) {
+                        char3nr = 0;
+                    } else {
+                        char3nr++;
+                    }
+                }
+                if (menu == 8) {
+                    speed++;
+                }
+            }
+            if (kState.IsKeyDown(Keys.Enter) && enterPressed == false) {
+                if (menu == 9) {
+                    state = State.Play;
+                }
+                if (menu == 10) {
+                    state = State.Menu;
+                }
+                menu = 1;
+                enterPressed = true;
+                clickclick.Play();
+            }
+            if (kState.IsKeyUp(Keys.Enter)) {
+                enterPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Up)) {
+                upPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Down)) {
+                downPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Left)) {
+                leftPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Right)) {
+                rightPressed = false;
+            }
+
+            if (menu == 1) {
+                menuColor1 = Color.Teal;
+
+            } else {
+                menuColor1 = Color.White;
+            }
+            if (menu == 2) {
+                menuColor2 = Color.Teal;
+            } else {
+                menuColor2 = Color.White;
+            }
+            if (menu == 3) {
+                menuColor3 = Color.Teal;
+            } else {
+                menuColor3 = Color.White;
+            }
+            if (menu == 4) {
+                menuColor4 = Color.Teal;
+
+            } else {
+                menuColor4 = Color.White;
+            }
+            if (menu == 5) {
+                menuColor5 = Color.Teal;
+            } else {
+                menuColor5 = Color.White;
+            }
+            if (menu == 6) {
+                menuColor6 = Color.Teal;
+            } else {
+                menuColor6 = Color.White;
+            }
+            if (menu == 7) {
+                menuColor7 = Color.Teal;
+
+            } else {
+                menuColor7 = Color.White;
+            }
+            if (menu == 8) {
+                menuColor8 = Color.Teal;
+            } else {
+                menuColor8 = Color.White;
+            }
+            if (menu == 9) {
+                menuColor9 = Color.Teal;
+            } else {
+                menuColor9 = Color.White;
+            }
+            if (menu == 10) {
+                menuColor10 = Color.Teal;
+            } else {
+                menuColor10 = Color.White;
             }
         }
-        void UpdatePlay(GameTime gameTime)
-        {
+        void UpdateHiscores(GameTime gameTime) {
+            KeyboardState kState = Keyboard.GetState();           
+
+            if (kState.IsKeyDown(Keys.Enter) && enterPressed == false) {
+                menu = 1;
+                clickclick.Play();
+                state = State.Menu;
+                enterPressed = true;
+            }
+            if (kState.IsKeyUp(Keys.Enter)) {
+                enterPressed = false;
+            }
+        }
+        void UpdatePlay(GameTime gameTime) {
+            judge.LoadContent(Content);
+
             KeyboardState kState = Keyboard.GetState();
 
-            hit1Rect = new Rectangle(hit1PosX, hitPosY, 100, 10);
-            hit2Rect = new Rectangle(hit2PosX, hitPosY, 100, 10);
-            hit3Rect = new Rectangle(hit3PosX, hitPosY, 100, 10);
-            hit4Rect = new Rectangle(hit4PosX, hitPosY, 100, 10);
+            arrowTimer += gameTime.ElapsedGameTime.Milliseconds;
+            intervalTimer += gameTime.ElapsedGameTime.Milliseconds;
 
-            beforeRect = new Rectangle(rectPosX, beforePosY, GraphicsDevice.Viewport.Width, 10);
-            afterRect = new Rectangle(rectPosX, afterPosY, GraphicsDevice.Viewport.Width, 10);
-            missRect = new Rectangle(rectPosX, missPosY, GraphicsDevice.Viewport.Width, 1);
-
-            timer += gameTime.ElapsedGameTime.Milliseconds;
-
-            if (timer > spawnTime)
-            {
-                blocks.Add(new Block());
-                timer = 0;
-                spawnTime -= 2;
+            if (arrowTimer > spawnTime) {
+                arrows.Add(new Arrow());
+                arrowTimer = 0;
             }
-           
-            foreach(Block block in blocks)
-            {
+            if (intervalTimer > 250) {
+                spawnTime -= 1;
+                intervalTimer = 0;
+            }
+
+            foreach (Arrow block in arrows) {
                 block.LoadContent(Content);
                 block.Update(gameTime);
 
-                if (kState.IsKeyDown(Keys.D) && dPressed == false)
-                {
-                    if (hit1Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 10;
-                        totalScore += combo * hitScore;
-                        hit10.Play();
+                block.speed = speed;
+
+                if (kState.IsKeyDown(Keys.D) && dPressed == false) {
+                    if (judge.hit1Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect)) {
+                        Hit10(block);
                     }
-                    if ((hit1Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit1Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 5;
-                        totalScore += combo * hitScore;
-                        hit5.Play();
+                    if ((judge.hit1Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        !judge.afterRect.Intersects(block.rect)) ||
+                        (judge.hit1Rect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect) &&
+                        !judge.beforeRect.Intersects(block.rect))) {
+                        Hit5(block);
                     }
-                    hit1Color = Color.Yellow;
                     dPressed = true;
                 }
-                if (kState.IsKeyUp(Keys.D)){
-                    hit1Color = Color.Red;
+                if (kState.IsKeyUp(Keys.D)) {
                     dPressed = false;
                 }
 
-                if (kState.IsKeyDown(Keys.F) && fPressed == false)
-                {
-                    if (hit2Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 10;
-                        totalScore += combo * hitScore;
-                        hit10.Play();
+                if (kState.IsKeyDown(Keys.F) && fPressed == false) {
+                    if (judge.hit2Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect)) {
+                        Hit10(block);
                     }
-                    if ((hit2Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit2Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 5;
-                        totalScore += combo * hitScore;
-                        hit5.Play();
+                    if ((judge.hit2Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        !judge.afterRect.Intersects(block.rect)) ||
+                        (judge.hit2Rect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect) &&
+                        !judge.beforeRect.Intersects(block.rect))) {
+                        Hit5(block);
                     }
-                    hit2Color = Color.Yellow;
                     fPressed = true;
                 }
-                if (kState.IsKeyUp(Keys.F))
-                {
-                    hit2Color = Color.Red;
+                if (kState.IsKeyUp(Keys.F)) {
                     fPressed = false;
                 }
 
-                if (kState.IsKeyDown(Keys.J) && jPressed == false)
-                {
-                    if (hit3Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 10;
-                        totalScore += combo * hitScore;
-                        hit10.Play();
+                if (kState.IsKeyDown(Keys.J) && jPressed == false) {
+                    if (judge.hit3Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect)) {
+                        Hit10(block);
                     }
-                    if ((hit3Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit3Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 5;
-                        totalScore += combo * hitScore;
-                        hit5.Play();
+                    if ((judge.hit3Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        !judge.afterRect.Intersects(block.rect)) ||
+                        (judge.hit3Rect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect) &&
+                        !judge.beforeRect.Intersects(block.rect))) {
+                        Hit5(block);
                     }
-                    hit3Color = Color.Yellow;
                     jPressed = true;
                 }
-                if (kState.IsKeyUp(Keys.J))
-                {
-                    hit3Color = Color.Red;
+                if (kState.IsKeyUp(Keys.J)) {
                     jPressed = false;
                 }
 
-                if (kState.IsKeyDown(Keys.K) && kPressed == false)
-                {
-                    if (hit4Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 10;
-                        totalScore += combo * hitScore;
-                        hit10.Play();
+                if (kState.IsKeyDown(Keys.K) && kPressed == false) {
+                    if (judge.hit4Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect)) {
+                        Hit10(block);
                     }
-                    if ((hit4Rect.Intersects(block.blockRect) && beforeRect.Intersects(block.blockRect) && !afterRect.Intersects(block.blockRect)) || (hit4Rect.Intersects(block.blockRect) && afterRect.Intersects(block.blockRect) && !beforeRect.Intersects(block.blockRect)))
-                    {
-                        remove.Add(block);
-                        combo++;
-                        hitScore = 5;
-                        totalScore += combo * hitScore;
-                        hit5.Play();
+                    if ((judge.hit4Rect.Intersects(block.rect) &&
+                        judge.beforeRect.Intersects(block.rect) &&
+                        !judge.afterRect.Intersects(block.rect)) ||
+                        (judge.hit4Rect.Intersects(block.rect) &&
+                        judge.afterRect.Intersects(block.rect) &&
+                        !judge.beforeRect.Intersects(block.rect))) {
+                        Hit5(block);
                     }
-                    hit4Color = Color.Yellow;
                     kPressed = true;
                 }
-                if (kState.IsKeyUp(Keys.K))
-                {
-                    hit4Color = Color.Red;
+                if (kState.IsKeyUp(Keys.K)) {
                     kPressed = false;
                 }
 
-                if (missRect.Intersects(block.blockRect))
-                {
+                if (judge.missRect.Intersects(block.rect)) {
                     remove.Add(block);
                     lives--;
+                    if (combo > maxCombo) {
+                        maxCombo = combo;
+                    }
                     combo = 0;
                     hitScore = 0;
                     miss.Play();
                 }
             }
-            foreach(Block block in remove)
-            {
-                blocks.Remove(block);
+            foreach (Arrow block in remove) {
+                arrows.Remove(block);
             }
 
-            if (lives == 0)
-            {
+            if (lives == 0) {
                 state = State.End;
             }
+
+            if (dPressed) {
+                judge.left = judge.leftD;
+            }
+            if (fPressed) {
+                judge.up = judge.upD;
+            }
+            if (jPressed) {
+                judge.down = judge.downD;
+            }
+            if (kPressed) {
+                judge.right = judge.rightD;
+            }
         }
-        void UpdateEnd(GameTime gameTime)
-        {
+        void UpdateEnd(GameTime gameTime) {
+
             KeyboardState kState = Keyboard.GetState();
-            if (kState.IsKeyDown(Keys.Enter) && keyPressed == false)
-            {
-                keyPressed = true;
-                lives = 3;
-                combo = 0;
-                hitScore = 0;
-                totalScore = 0;
 
-                timer = 0;
-                spawnTime = 500;
-
-                foreach (Block block in blocks)
-                {
-                    remove.Add(block);
+            if (hasRead == false) {
+                using (StreamReader sr = new StreamReader("Content/hiscores.txt")) {
+                    hiscores.Clear();
+                    for (int i = 0; i < 10; i++) {
+                        string readString = sr.ReadLine();
+                        string[] splitString = readString.Split(new char[] { ',' });
+                        string name = splitString[0];
+                        int score = Int32.Parse(splitString[1]);
+                        int combo = Int32.Parse(splitString[2]);
+                        hiscores.Add(new Hiscore(name, score, combo));
+                        hiscores.Sort((x, y) => y.score.CompareTo(x.score));
+                    }
+                    sr.Close();
                 }
-                state = State.Play;
+                hasRead = true;
             }
-            if (kState.IsKeyUp(Keys.Enter))
-            {
-                keyPressed = false;
+
+            if(hasSubmitted == false) {
+                using (StreamWriter sw = new StreamWriter("Content/hiscores.txt", false)) {
+                    if (totalScore > hiscores[9].score) {
+                        hiscores.Add(new Hiscore(char1 + char2 + char3, totalScore, maxCombo));
+                        hiscores.Sort((x, y) => y.score.CompareTo(x.score));
+                        hiscores.RemoveAt(10);
+                        foreach (Hiscore hiscore in hiscores) {
+                            sw.WriteLine(hiscore.user + "," + hiscore.score + "," + hiscore.combo);
+                        }
+                    }
+                    sw.Close();
+                }
+                hasSubmitted = true;
+            }
+
+            if (hasPrinted == false) {
+                foreach (Hiscore hiscore in hiscores) {
+                    hiscore.LoadContent(Content);
+                }
+                hasPrinted = true;
+            }
+
+            if (kState.IsKeyDown(Keys.Up) && upPressed == false) {
+                upPressed = true;
+                click.Play();
+                if (menu == 1) {
+                    menu = 3;
+                } else {
+                    menu--;
+                }
+            }
+            if (kState.IsKeyDown(Keys.Down) && downPressed == false) {
+                downPressed = true;
+                click.Play();
+                if (menu == 3) {
+                    menu = 1;
+                } else {
+                    menu++;
+                }
+            }
+            if (kState.IsKeyDown(Keys.Enter) && enterPressed == false) {
+                if (menu == 1) {
+                    Reset();
+                    state = State.Play;
+                }
+                if (menu == 2) {
+                    Reset();
+                    state = State.Menu;
+                }
+                if (menu == 3) {
+                    this.Exit();
+                }
+                menu = 1;
+                enterPressed = true;
+                clickclick.Play();
+            }
+            if (kState.IsKeyUp(Keys.Enter)) {
+                enterPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Up)) {
+                upPressed = false;
+            }
+            if (kState.IsKeyUp(Keys.Down)) {
+                downPressed = false;
+            }
+
+            if (menu == 1) {
+                menuColor1 = Color.Teal;
+                menuColor2 = Color.White;
+                menuColor3 = Color.White;
+            }
+            if (menu == 2) {
+                menuColor1 = Color.White;
+                menuColor2 = Color.Teal;
+                menuColor3 = Color.White;
+            }
+            if (menu == 3) {
+                menuColor1 = Color.White;
+                menuColor2 = Color.White;
+                menuColor3 = Color.Teal;
             }
         }
 
-        protected override void Draw(GameTime gameTime)
-        {
+        void Hit10(Arrow arrow) {
+            remove.Add(arrow);
+            combo++;
+            hit10count++;
+            hitScore = 10;
+            totalScore += combo * hitScore;
+            pop.Play();
+        }
+        void Hit5(Arrow arrow) {
+            remove.Add(arrow);
+            combo++;
+            hit5count++;
+            hitScore = 5;
+            totalScore += combo * hitScore;
+            pop.Play();
+        }
+        void Reset() {
+            enterPressed = true;
+            hasPrinted = false;
+            hasRead = false;
+            hasSubmitted = false;
+            lives = 3;
+            combo = 0;
+            maxCombo = 0;
+            hitScore = 0;
+            totalScore = 0;
+            hit10count = 0;
+            hit5count = 0;
+
+            arrowTimer = 0;
+            intervalTimer = 0;
+            spawnTime = 500;
+
+            foreach (Arrow block in arrows) {
+                remove.Add(block);
+            }
+        }
+
+        protected override void Draw(GameTime gameTime) {
             base.Draw(gameTime);
 
-            switch (state)
-            {
+            switch (state) {
                 case State.Menu:
                     DrawMenu(gameTime);
                     break;
                 case State.Options:
                     DrawOptions(gameTime);
+                    break;
+                case State.Hiscores:
+                    DrawHiscores(gameTime);
                     break;
                 case State.Play:
                     DrawPlay(gameTime);
@@ -347,75 +694,127 @@ namespace Collect
                     break;
             }
         }
-        void DrawMenu(GameTime gameTime)
-        {
+        void DrawMenu(GameTime gameTime) {
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(bigfont, "no sound", new Vector2(100, 200), Color.Teal);
-            spriteBatch.DrawString(bigfont, "stepmania", new Vector2(100, 225), Color.Yellow);
-            spriteBatch.DrawString(bigfont, "ripoff", new Vector2(100, 250), Color.Red);
-            spriteBatch.DrawString(font, "press enter to start", new Vector2(100, 400), Color.White);
+            spriteBatch.DrawString(bigfont, "no sound", new Vector2(75, 50), Color.Teal);
+            spriteBatch.DrawString(bigfont, "stepmania", new Vector2(75, 75), Color.Yellow);
+            spriteBatch.DrawString(bigfont, "ripoff", new Vector2(75, 100), Color.Red);
+            spriteBatch.DrawString(font, "start", new Vector2(75, 450), menuColor1);
+            spriteBatch.DrawString(font, "hiscores", new Vector2(75, 475), menuColor2);
+            spriteBatch.DrawString(font, "quit", new Vector2(75, 500), menuColor3);
             spriteBatch.End();
         }
-        void DrawOptions(GameTime gameTime)
-        {
+        void DrawOptions(GameTime gameTime) {
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(bigfont, "options", new Vector2(100, 200), Color.Teal);
-            spriteBatch.DrawString(font, "nothing here yet", new Vector2(100, 300), Color.Yellow);
-            spriteBatch.DrawString(font, "play with D,F,J,K btw", new Vector2(100, 350), Color.Red);
-            spriteBatch.DrawString(font, "press enter", new Vector2(100, 400), Color.White);
+            spriteBatch.DrawString(bigfont, "options", new Vector2(75, 50), Color.Teal);
+            spriteBatch.DrawString(font, "username:", new Vector2(75, 100), Color.Yellow);
+
+            if (char1 != null && char2 != null && char3 != null) {
+                spriteBatch.DrawString(bigfont, char1, new Vector2(200, 95), menuColor1);
+                spriteBatch.DrawString(bigfont, char2, new Vector2(225, 95), menuColor2);
+                spriteBatch.DrawString(bigfont, char3, new Vector2(250, 95), menuColor3);
+            }
+
+            spriteBatch.DrawString(font, "controls:", new Vector2(75, 130), Color.Yellow);
+            spriteBatch.DrawString(bigfont, key1, new Vector2(200, 125), menuColor4);
+            spriteBatch.DrawString(bigfont, key2, new Vector2(225, 125), menuColor5);
+            spriteBatch.DrawString(bigfont, key3, new Vector2(250, 125), menuColor6);
+            spriteBatch.DrawString(bigfont, key4, new Vector2(275, 125), menuColor7);
+            spriteBatch.DrawString(font, "speed:", new Vector2(75, 160), Color.Yellow);
+            spriteBatch.DrawString(bigfont, "" + speed, new Vector2(200, 155), menuColor8);
+            spriteBatch.DrawString(bigfont, "click the", new Vector2(75, 250), Color.White);
+            spriteBatch.DrawString(bigfont, "arrows!", new Vector2(75, 275), Color.White);
+            spriteBatch.DrawString(font, "start", new Vector2(75, 475), menuColor9);
+            spriteBatch.DrawString(font, "back", new Vector2(75, 500), menuColor10);
             spriteBatch.End();
         }
-        void DrawPlay(GameTime gameTime)
-        {
+        void DrawHiscores(GameTime gameTime) {
+            GraphicsDevice.Clear(Color.Black);
+
+            spriteBatch.Begin();
+            spriteBatch.DrawString(bigfont, "local hiscores", new Vector2(75, 50), Color.Teal);
+
+            if (hiscores.Count != 0) {
+                int posY = 90;
+
+                foreach (Hiscore hiscore in hiscores) {
+                    if (hiscore.font != null) {
+                        bool increased = false;
+                        hiscore.Draw(spriteBatch, posY);
+                        if (!increased) {
+                            posY += 25;
+                            increased = true;
+                        }
+                        increased = false;
+                    }
+                }
+            }
+
+            spriteBatch.DrawString(font, "hiscores are only loaded if you've", new Vector2(75, 400), Color.White);
+            spriteBatch.DrawString(font, "played a round because ???", new Vector2(75, 420), Color.White);
+
+            spriteBatch.DrawString(font, "back", new Vector2(75, 500), Color.Teal);
+            spriteBatch.End();
+        }
+        void DrawPlay(GameTime gameTime) {
             GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
-            spriteBatch.Draw(line, beforeRect, Color.Black);
-            spriteBatch.Draw(line, hit1Rect, hit1Color);
-            spriteBatch.Draw(line, hit2Rect, hit2Color);
-            spriteBatch.Draw(line, hit3Rect, hit3Color);
-            spriteBatch.Draw(line, hit4Rect, hit4Color);
-            spriteBatch.Draw(line, afterRect, Color.Black);
-            spriteBatch.Draw(line, missRect, Color.Black);
 
-            spriteBatch.DrawString(font, "Score", new Vector2(10, 510), Color.White);
-            spriteBatch.DrawString(font, "Combo", new Vector2(110, 510), Color.White);
-            spriteBatch.DrawString(font, "Lives left", new Vector2(210, 510), Color.White);
-            spriteBatch.DrawString(font, "Hit", new Vector2(310, 510), Color.White);
-            spriteBatch.DrawString(bigfont, "" + totalScore, new Vector2(10, 550), Color.White);
-            spriteBatch.DrawString(bigfont, "" + combo, new Vector2(110, 550), Color.White);
-            spriteBatch.DrawString(bigfont, "" + lives, new Vector2(210, 550), Color.White);
+            judge.Draw(spriteBatch);
 
-            if(hitScore == 10)
-            {
-                spriteBatch.DrawString(bigfont, "" + hitScore, new Vector2(310, 550), Color.Yellow);
-            }
-            else if(hitScore == 5)
-            {
-                spriteBatch.DrawString(bigfont, "" + hitScore, new Vector2(310, 550), Color.Lime);
-            }
-            else
-            {
-                spriteBatch.DrawString(bigfont, "" + hitScore, new Vector2(310, 550), Color.Red);
+            spriteBatch.DrawString(bigfont, "" + totalScore, new Vector2(10, 10), Color.White);
+            spriteBatch.DrawString(font, "" + combo, new Vector2(10, 40), Color.White);
+            spriteBatch.DrawString(bigfont, "" + lives, new Vector2(370, 10), Color.White);
+
+            if (hitScore == 10) {
+                spriteBatch.DrawString(font, "" + hitScore, new Vector2(370, 40), Color.Cyan);
+            } else if (hitScore == 5) {
+                spriteBatch.DrawString(font, " " + hitScore, new Vector2(370, 40), Color.Lime);
+            } else {
+                spriteBatch.DrawString(font, " " + hitScore, new Vector2(370, 40), Color.Red);
             }
 
-            foreach (Block block in blocks)
-            {
+            foreach (Arrow block in arrows) {
                 block.Draw(spriteBatch);
             }
             spriteBatch.End();
         }
-        void DrawEnd(GameTime gameTime)
-        {
+        void DrawEnd(GameTime gameTime) {
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(bigfont, "leaderboard", new Vector2(100, 200), Color.Teal);
-            spriteBatch.DrawString(font, "you scored: "+totalScore, new Vector2(100, 300), Color.Yellow);
-            spriteBatch.DrawString(font, "press enter to retry", new Vector2(100, 400), Color.White);
+            spriteBatch.DrawString(bigfont, "you scored", new Vector2(75, 50), Color.Teal);
+            spriteBatch.DrawString(bigfont, "" + totalScore + " (" + maxCombo + ")*", new Vector2(75, 90), Color.Yellow);
+            spriteBatch.DrawString(font, "10s:", new Vector2(75, 120), Color.White);
+            spriteBatch.DrawString(font, "5s:", new Vector2(175, 120), Color.White);
+            spriteBatch.DrawString(font, "*highest combo", new Vector2(75, 550), Color.Yellow);
+            spriteBatch.DrawString(font, "" + hit10count, new Vector2(115, 120), Color.Cyan);
+            spriteBatch.DrawString(font, "" + hit5count, new Vector2(205, 120), Color.Lime);
+            spriteBatch.DrawString(bigfont, "local hiscores", new Vector2(75, 150), Color.Teal);
+
+            if (hiscores.Count != 0) {
+                int posY = 190;
+
+                foreach (Hiscore hiscore in hiscores) {
+                    if (hiscore.font != null) {
+                        bool increased = false;
+                        hiscore.Draw(spriteBatch, posY);
+                        if (!increased) {
+                            posY += 25;
+                            increased = true;
+                        }
+                        increased = false;
+                    }
+                }
+            }
+
+            spriteBatch.DrawString(font, "retry", new Vector2(75, 450), menuColor1);
+            spriteBatch.DrawString(font, "main menu", new Vector2(75, 475), menuColor2);
+            spriteBatch.DrawString(font, "quit", new Vector2(75, 500), menuColor3);
             spriteBatch.End();
         }
     }

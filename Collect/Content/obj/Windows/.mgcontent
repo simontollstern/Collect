@@ -4,10 +4,12 @@
   <Platform>Windows</Platform>
   <Config />
   <SourceFiles>
-    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/hit5.wav</File>
-    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/hit10.wav</File>
-    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/miss.wav</File>
-    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/font.spritefont</File>
-    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/bigfont.spritefont</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/fonts/bigfont.spritefont</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/fonts/font.spritefont</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/textures/pixel.jpg</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/sounds/hit5.wav</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/sounds/hit10.wav</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/sounds/miss.wav</File>
+    <File>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/sounds/pop.wav</File>
   </SourceFiles>
 </SourceFileCollection>

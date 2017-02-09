@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SourceFile>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/fonts/bigfont.spritefont</SourceFile>
+  <SourceTime>2017-02-09T18:53:28.0088342+01:00</SourceTime>
+  <DestFile>c:/Users/simontollstern/documents/visual studio 2015/Projects/Collect/Collect/Content/bin/Windows/fonts/bigfont.xnb</DestFile>
+  <DestTime>2017-02-09T18:53:29.4649175+01:00</DestTime>
+  <Importer>FontDescriptionImporter</Importer>
+  <ImporterTime>2016-03-30T08:36:08+02:00</ImporterTime>
+  <Processor>FontDescriptionProcessor</Processor>
+  <ProcessorTime>2016-03-30T08:36:08+02:00</ProcessorTime>
+  <Parameters>
+    <Key>TextureFormat</Key>
+    <Value>Compressed</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>
